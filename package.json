@@ -1,0 +1,18 @@
+{
+  "name": "pdf-viewer-project",
+  "version": "1.0.0",
+  "description": "A simple PDF viewer app",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "parcel src/index.html"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "dotenv": "^16.4.7",
+    "pdfjs-dist": "^3.11.174"
+  },
+  "devDependencies": {
+    "buffer": "^6.0.3",
+    "parcel-bundler": "^1.12.5"
+  }
+}
