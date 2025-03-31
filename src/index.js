@@ -1,142 +1,35 @@
-// Importar las librerías
-import { exec } from 'child_process'; //Python
 import * as pdfjsLib from 'pdfjs-dist'; // Librería para trabajar con documentos PDF
 import axios from 'axios'; // Para hacer peticiones HTTP
 
 // Configuración del trabajador (worker) de PDF.js para procesar los PDFs en segundo plano
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
-// Variable global para almacenar el texto extraído del PDF
-let currentText = '';
+let currentText = ''; // Variable global para almacenar el texto extraído del PDF
 
-// Función para anonimizar texto utilizando la API Flask de Google Colab
+// Función para anonimizar el texto (subrayar en rojo usando marcadores únicos en el backend)
 async function anonymizeTextWithPython(text) {
   try {
-    // Hacemos la petición POST a la URL LOCAL que redirige a tu aplicación Flask
     const response = await axios.post('http://localhost:5000/anonymize', {
       text: text
     });
 
-    // Verificamos si la respuesta fue exitosa
-    if (response.status === 200) {
-      // La respuesta de Flask contiene el texto anonimizado
-      if (response.data && response.data.anonymizedText) {
-        return response.data.anonymizedText;  
-      } else {
-        throw new Error('Respuesta inesperada del servidor Flask.');
-      }
+    if (response.status === 200 && response.data && response.data.anonymizedText) {
+      return response.data.anonymizedText;
     } else {
-      console.error('Error en la respuesta de Flask: Status', response.status);
-      throw new Error('Error al recibir la respuesta de Flask');
+      throw new Error('Respuesta inesperada del servidor Flask.');
     }
   } catch (error) {
-    console.error('Error en la petición a Flask:', error);
-
-    // Diferenciar entre un error de red y un error interno
-    if (error.response) {
-      // Errores provenientes de la respuesta (ej. código de estado 4xx o 5xx)
-      console.error('Error de respuesta de Flask:', error.response.data);
-      throw new Error(`Error de respuesta: ${error.response.status} - ${error.response.statusText}`);
-    } else if (error.request) {
-      // Errores cuando no se recibe respuesta
-      console.error('No se recibió respuesta de Flask:', error.request);
-      throw new Error('No se recibió respuesta del servidor Flask');
-    } else {
-      // Errores inesperados en la solicitud
-      console.error('Error inesperado:', error.message);
-      throw new Error('Error inesperado al hacer la solicitud');
-    }
+    console.error('Error al intentar anonimizar el texto:', error);
+    throw new Error('Error al intentar anonimizar el texto.');
   }
 }
 
-// Evento que se activa al hacer clic en el botón para abrir un archivo PDF
+// Evento para abrir un PDF
 document.getElementById('open-pdf').addEventListener('click', () => {
   document.getElementById('file-input').click();
 });
 
-// Evento que se activa al hacer clic en el botón de búsqueda
-document.getElementById('search-text').addEventListener('click', () => {
-  const searchInput = document.getElementById('search-input');
-  searchInput.style.display = searchInput.style.display === 'none' ? 'block' : 'none';
-  if (searchInput.style.display === 'block') {
-    searchInput.focus();
-  }
-});
-
-// Evento que se activa al escribir en el campo de búsqueda
-document.getElementById('search-input').addEventListener('input', (e) => {
-  const searchTerm = e.target.value.toLowerCase();
-  const textArea = document.getElementById('extracted-text');
-  const text = textArea.value;
-
-  if (!searchTerm) {
-    textArea.value = currentText;
-    return;
-  }
-
-  const regex = new RegExp(searchTerm, 'gi');
-  const highlightedText = text.replace(regex, (match) => `[${match}]`);
-  textArea.value = highlightedText;
-});
-
-document.getElementById('anonymize-text').addEventListener('click', async () => {
-  const textArea = document.getElementById('extracted-text');
-  const text = textArea.value.trim();
-
-  if (!text) {
-      alert("Por favor, ingresa un texto antes de anonimizar.");
-      return;
-  }
-
-  try {
-      // Mostrar mensaje de carga
-      Swal.fire({
-          title: 'Anonimizando texto...',
-          text: 'Por favor, espera mientras procesamos el texto.',
-          icon: 'info',
-          allowOutsideClick: false,
-          didOpen: () => {
-              Swal.showLoading();
-          }
-      });
-
-      // Hacer la petición a Flask
-      const response = await fetch('http://localhost:5000/anonymize', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ text: text })  // Enviar el texto extraído
-      });
-
-      if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || `Error desconocido: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();  // La respuesta contiene el texto anonimizado
-      textArea.value = data.anonymizedText; // Actualiza el texto anonimizado
-
-      // Cierra el mensaje de carga y muestra éxito
-      Swal.close();
-      Swal.fire({
-          title: 'Texto Anonimizado',
-          text: 'El texto ha sido anonimizado exitosamente.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-      });
-
-  } catch (error) {
-      // Cierra el mensaje de carga
-      Swal.close();
-
-      // Muestra un alert con el error específico
-      alert(`No se pudo anonimizar el texto: ${error.message}`);
-  }
-});
-
-// Evento que se activa cuando el usuario selecciona un archivo PDF
+// Evento al seleccionar un PDF
 document.getElementById('file-input').addEventListener('change', async (event) => {
   const file = event.target.files[0];
   if (file && file.type === 'application/pdf') {
@@ -154,9 +47,7 @@ document.getElementById('file-input').addEventListener('change', async (event) =
           text: 'Por favor, espera.',
           icon: 'info',
           allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
+          didOpen: () => { Swal.showLoading(); }
         });
 
         const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
@@ -169,9 +60,8 @@ document.getElementById('file-input').addEventListener('change', async (event) =
             text += item.str + ' ';
           });
         }
-
         currentText = text;
-        document.getElementById('extracted-text').value = text;
+        document.getElementById('extracted-text').textContent = text;
         Swal.close();
       } catch (error) {
         Swal.fire({
@@ -192,9 +82,71 @@ document.getElementById('file-input').addEventListener('change', async (event) =
   }
 });
 
-// Función para mostrar un mensaje en la interfaz
-function showMessage(message, type) {
-  const messageElement = document.getElementById('message');
-  messageElement.textContent = message;
-  messageElement.className = type;
-}
+// Evento para anonimizar el texto
+document.getElementById('anonymize-text').addEventListener('click', async () => {
+  const textArea = document.getElementById('extracted-text');
+  const text = textArea.textContent.trim();
+
+  if (!text) {
+    alert("Por favor, ingresa un texto antes de anonimizar.");
+    return;
+  }
+
+  try {
+    Swal.fire({
+      title: 'Anonimizando texto...',
+      text: 'Por favor, espera mientras procesamos el texto.',
+      icon: 'info',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    const anonymizedText = await anonymizeTextWithPython(text);
+    // Reemplazar los marcadores únicos «anon» y «/anon» por un <span> con la clase "anonymized"
+    const highlightedText = anonymizedText.replace(/«anon»(.*?)«\/anon»/g, '<span class="anonymized">$1</span>');
+    textArea.innerHTML = highlightedText;
+
+    Swal.close();
+    Swal.fire({
+      title: 'Texto Anonimizado',
+      text: 'El texto ha sido anonimizado exitosamente.',
+      icon: 'success',
+      timer: 2000,
+      showConfirmButton: false
+    });
+  } catch (error) {
+    Swal.close();
+    alert(`No se pudo anonimizar el texto: ${error.message}`);
+  }
+});
+
+// Evento para buscar texto (simula Ctrl+F) en el contenedor extracted-text
+document.getElementById('search-text').addEventListener('click', () => {
+  const searchInput = document.getElementById('search-input');
+  // Alterna la visibilidad del input de búsqueda
+  if (searchInput.style.display === 'none' || searchInput.style.display === '') {
+    searchInput.style.display = 'block';
+    searchInput.focus();
+  } else {
+    searchInput.style.display = 'none';
+  }
+});
+
+// Evento para la búsqueda en tiempo real (resalta las coincidencias en el texto extraído)
+document.getElementById('search-input').addEventListener('input', function (e) {
+  const searchTerm = e.target.value;
+  const container = document.getElementById('extracted-text');
+
+  if (!searchTerm) {
+    // Si el campo de búsqueda está vacío, se muestra el texto original o anonimizado
+    container.innerHTML = container.innerText; // Reinicia el HTML sin resaltados
+    return;
+  }
+  
+  // Crear una expresión regular para buscar el término (sin distinguir mayúsculas/minúsculas)
+  const regex = new RegExp(`(${searchTerm})`, 'gi');
+  
+  // Resaltar coincidencias en el texto original (currentText) o en el contenido actual
+  const highlighted = currentText.replace(regex, '<span class="highlight">$1</span>');
+  container.innerHTML = highlighted;
+});

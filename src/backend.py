@@ -22,7 +22,7 @@ login(token=hf_token)
 
 # Configurar Flask
 app = Flask(__name__)
-CORS(app)  
+CORS(app)
 
 # Cargar el modelo de anonimización
 model_checkpoint = "BSC-LT/roberta_model_for_anonimization"
@@ -34,25 +34,25 @@ pipe = TokenClassificationPipeline(model=model, tokenizer=tokenizer, aggregation
 PHONE_REGEX = r"\+?\d{1,3}[-.\s]?\d{2,3}[-.\s]?\d{2,3}[-.\s]?\d{3,4}"
 
 def anonymize_text(text):
-    """ Encierra en corchetes nombres, organizaciones, lugares y teléfonos detectados """
-
+    """Envuelve en marcadores únicos («anon» ... «/anon») nombres, organizaciones, lugares y teléfonos detectados."""
+    
     # 1. Detectar entidades con el modelo
     entities = pipe(text)
     print(f"Entidades detectadas: {entities}")  # Debugging
 
-    # 2. Crear lista de reemplazos con el formato [Palabra]
+    # 2. Crear lista de reemplazos con el formato «anon»...«/anon»
     replacements = []
     
     for entity in entities:
         start, end = entity['start'], entity['end']
         original_text = text[start:end]
-        replacements.append((start, end, f"[{original_text}]"))  # Encerrar en corchetes
+        replacements.append((start, end, f"«anon»{original_text}«/anon»"))  # Usar marcadores únicos
 
     # 3. Detectar teléfonos con regex
     for match in re.finditer(PHONE_REGEX, text):
         start, end = match.start(), match.end()
         phone_number = text[start:end]
-        replacements.append((start, end, f"[{phone_number}]"))  # Encerrar en corchetes
+        replacements.append((start, end, f"«anon»{phone_number}«/anon»"))  # Usar marcadores únicos
 
     # 4. Ordenar reemplazos de atrás hacia adelante
     replacements.sort(reverse=True, key=lambda x: x[0])
@@ -74,7 +74,6 @@ def anonymize():
             return jsonify({"error": "Texto no proporcionado"}), 400
 
         anonymized_text = anonymize_text(text)
-
         return jsonify({"anonymizedText": anonymized_text})
 
     except Exception as e:

@@ -18,12 +18,11 @@
     <div class="container">
       <iframe id="pdf-iframe" class="pdf-viewer"></iframe>
       <div class="text-container">
-        <textarea id="extracted-text" rows="10" cols="50" placeholder="Extracted text will appear here..."></textarea>
-        
+        <div id="extracted-text" class="extracted-text" contenteditable="true"></div>
         <div class="search-box">
           <input type="text" id="search-input" placeholder="Texto a buscar..." style="display: none">
         </div>
-      </div>
+      </div>      
     </div>
     <div id="message"></div>
     <input type="file" id="file-input" accept="application/pdf" style="display: none">

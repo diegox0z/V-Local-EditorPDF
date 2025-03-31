@@ -71,19 +71,22 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  height: 80vh; 
 }
 
-
-textarea {
+.extracted-text {
   width: 100%;
-  height: 80vh;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  height: 100%; 
   padding: 2vh;
   font-size: 16px;
   box-sizing: border-box;
+  white-space: pre-wrap; 
+  word-wrap: break-word;
+  overflow-y: auto; 
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fafafa;
 }
-
 
 .search-box {
   width: 100%;
@@ -109,4 +112,11 @@ textarea {
 .highlight {
   background-color: yellow;
   font-weight: bold;
+}
+
+.anonymized {
+  text-decoration: underline;
+  text-decoration-color: red;
+  font-weight: bold;
+  color: red;
 }

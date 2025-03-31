@@ -63,7 +63,7 @@ Ejecuta la aplicación frontend:
 npm start
 ```
 
-Luego, abre `http://localhost:3000` en tu navegador.
+Luego, abre `http://localhost:1234` en tu navegador.
 
 ## Estructura del Proyecto
 ```
@@ -85,7 +85,7 @@ Luego, abre `http://localhost:3000` en tu navegador.
 ```
 
 ## Contribuciones
-Si deseas mejorar la aplicación, ¡las contribuciones son bienvenidas! Por favor, haz un fork del repositorio y envía un pull request.
+Esta es una aplicación de código abierto realziada en prácticas, si te apetece contribuir haz un fork del repositorio y envía un pull request. Estaré encantado de revisarlo un saludo.
 
 ## Licencia
 Este proyecto está bajo la licencia MIT.
