@@ -47,6 +47,7 @@ Antes de ejecutar la aplicación, asegúrate de tener instalados los siguientes 
 ### Ejecución de scripts deshabilitada
 En caso de estar la ejecución de scripts deshabilitada se introduce el siguiente comando para poder ejecutarlo en la terminal actual de powershell, por motivos de seguridad no se cambiará la directiva de grupo.
 ```Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+```
 
 ### Iniciar el Servidor Flask
 Ejecuta el servidor Flask para manejar la anonimización de texto:
